@@ -3,7 +3,7 @@
 #created by: Matus Justik
 #login: xjusti00
 
-$firstLineHeader = false;      #pomocna premena na kontrolu hlavicky suboru
+$firstLineHeader = false;      #pomocna premena na kontrolu hlavicky suboru (flag)
 
 
 #error 10 chybajuci parameter skriptu alebo pouzitie zakazanej kombinacie
@@ -16,7 +16,8 @@ $firstLineHeader = false;      #pomocna premena na kontrolu hlavicky suboru
 
 ini_set('display_errors', 'stderr');
 
-if ($argc > 1) {                         #pripadny help
+#funkcia vypisujuca help
+if ($argc > 1) {
 
     if ($argv[2] = "--help") {
         echo ("Pouzitie: parse.php [prikaz] < vstupnySubor \n");
@@ -24,7 +25,7 @@ if ($argc > 1) {                         #pripadny help
     }
 }
 
-#start xml
+#zaciatok xml
 $xml = new XMLWriter();
 $xml->openURI('php://output');
 $xml->startDocument('1.0', 'UTF-8');
@@ -32,7 +33,10 @@ $xml->setIndent(4);
 $xml->startElement('program');
 $xml->writeAttribute('language', 'IPPcode22');
 
+##############################################################################################
 #zaciatok funkcii
+
+#funkcia bez parametru
 function none($xml, $chopLine, $order)
 {
     $xml->startElement('instruction');
@@ -40,6 +44,8 @@ function none($xml, $chopLine, $order)
     $xml->writeAttribute('opcode', $chopLine[0]);
     $xml->endElement();
 }
+
+#funkcia pre premennu a symb
 function varsym($xml, $chopLine, $order)
 {
 
@@ -62,7 +68,7 @@ function varsym($xml, $chopLine, $order)
     if (preg_match("/^(GF@|LF@|TF@)(?!@)/", $chopLine[2]) && preg_match("/@[a-zA-Z\_\-\$\&\%\*\!\?][a-zA-Z0-9\_\-\$\&\%\*\!\?]*$/", $chopLine[2])) {
         $xml->writeAttribute('type', 'var');
     } elseif (preg_match("/^(int@[+-]?[0-9]+$)/", $chopLine[2])) {
-        $chopLine[2] = preg_replace("/^(int@)/", "", $chopLine[2]);
+        $chopLine[2] = preg_replace("/^(int@)/", "", $chopLine[2]);     #odstranuje nepotrebnu cast vstupneho kodu aj vo vsetkych pripadoch dole!!!
         $xml->writeAttribute('type', 'int');
     } elseif (preg_match("/^(bool@(true|false)$)/", $chopLine[2])) {
         $chopLine[2] = preg_replace("/^(bool@)/", "", $chopLine[2]);
@@ -83,6 +89,7 @@ function varsym($xml, $chopLine, $order)
     $xml->endElement();
 }
 
+#funkcia pre premennu a dva symb 
 function varsymsym($xml, $chopLine, $order)
 {
     $xml->startElement('instruction');
@@ -149,6 +156,7 @@ function varsymsym($xml, $chopLine, $order)
     $xml->endElement();
 }
 
+#funkcia pre len premennu
 function variable($xml, $chopLine, $order)
 {
     $xml->startElement('instruction');
@@ -168,6 +176,7 @@ function variable($xml, $chopLine, $order)
     }
 }
 
+#funkcia len pre lab
 function lab($xml, $chopLine, $order)
 {
     $xml->startElement('instruction');
@@ -187,6 +196,7 @@ function lab($xml, $chopLine, $order)
     $xml->endElement();
 }
 
+#funkcia len pre symbol
 function symbol($xml, $chopLine, $order)
 {
     $xml->startElement('instruction');
@@ -217,16 +227,22 @@ function symbol($xml, $chopLine, $order)
     $xml->endElement();
 }
 
+#funkcia pre lab a dva symb
 function labsymsym($xml, $chopLine, $order)
 {
     $xml->startElement('instruction');
     $xml->writeAttribute('order', $order);
     $xml->writeAttribute('opcode', $chopLine[0]);
     #argument 1
-    $xml->startElement('arg1');
-    $xml->writeAttribute('type', 'label');
-    $xml->text($chopLine[1]);
-    $xml->endElement();
+    if (preg_match("/^[a-zA-Z\_\-\$\&\%\*\!\?][a-zA-Z0-9\_\-\$\&\%\*\!\?]*$/", $chopLine[1])) {
+        $xml->startElement('arg1');
+        $xml->writeAttribute('type', 'label');
+        $xml->text($chopLine[1]);
+        $xml->endElement();
+    } else {
+        fwrite(STDERR, "zla instrukcia\n");
+        exit(23);
+    }
     #argument 2
     $xml->startElement('arg2');
     #o co sa jedna
@@ -278,6 +294,7 @@ function labsymsym($xml, $chopLine, $order)
     $xml->endElement();
 }
 
+#funkcia pre premennu a type
 function vartype($xml, $chopLine, $order)
 {
     $xml->startElement('instruction');
@@ -307,7 +324,10 @@ function vartype($xml, $chopLine, $order)
 }
 
 
+#sluzi na pocitanie instrukcii 
 $order = 1;
+
+
 #nacitanie suboru ... jednotlivych riadkov 
 while ($line = fgets(STDIN)) {
 
@@ -319,7 +339,9 @@ while ($line = fgets(STDIN)) {
         continue;
     }
 
-    $line = preg_replace('/^\s+|\s+$/', '', $line); #odstranenie neziaducich znakov
+    #odstranenie neziaducich znakov
+    $line = preg_replace('/^\s+|\s+$/', '', $line);
+
 
     #kontrola hlavicky suboru
     if (!$firstLineHeader) {
@@ -332,16 +354,15 @@ while ($line = fgets(STDIN)) {
         }
     }
 
+
     #rozdelenie line na chopLine
     $chopLine = preg_split('/\s+/', trim($line, "\n"));
 
     #prve slovo da na velke znaky
     $chopLine[0] = strtoupper($chopLine[0]);
 
+    #zaciatok switch case
     switch ($chopLine[0]) {
-
-
-
         case 'MOVE':
             if (count($chopLine) == 3) {
                 varsym($xml, $chopLine, $order);
@@ -637,7 +658,8 @@ while ($line = fgets(STDIN)) {
 
             break;
     }
-    $commentFlag = false;
+
+    #pocitanie instrukcie  ++ 
     $order++;
 }
 
