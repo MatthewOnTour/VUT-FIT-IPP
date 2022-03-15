@@ -59,7 +59,7 @@ function varsym($xml, $chopLine, $order)
     #argument 2
     $xml->startElement('arg2');
     #o co sa jedna
-    if (preg_match("/^(GF@|LF@|TF@)/", $chopLine[2]) && preg_match("/@[a-zA-Z\_\-\$\&\%\*\!\?][a-zA-Z0-9\_\-\$\&\%\*\!\?]*$/", $chopLine[2])) {
+    if (preg_match("/^(GF@|LF@|TF@)(?!@)/", $chopLine[2]) && preg_match("/@[a-zA-Z\_\-\$\&\%\*\!\?][a-zA-Z0-9\_\-\$\&\%\*\!\?]*$/", $chopLine[2])) {
         $xml->writeAttribute('type', 'var');
     } elseif (preg_match("/^(int@[+-]?[0-9]+$)/", $chopLine[2])) {
         $chopLine[2] = preg_replace("/^(int@)/", "", $chopLine[2]);
@@ -67,7 +67,7 @@ function varsym($xml, $chopLine, $order)
     } elseif (preg_match("/^(bool@(true|false)$)/", $chopLine[2])) {
         $chopLine[2] = preg_replace("/^(bool@)/", "", $chopLine[2]);
         $xml->writeAttribute('type', 'bool');
-    } elseif (preg_match("/^(string@(?:[^\s\\#]|(\\[0-9]{3}))*$)/", $chopLine[2])) {
+    } elseif (preg_match("/^(string@(?:[^\s\#]|(\[0-9]{3}))*$)/", $chopLine[2]) && (preg_match_all('/\\\\/', $chopLine[2]) === (preg_match_all('/\\\\[0-9]{3}/', $chopLine[2])))) {
         $chopLine[2] = preg_replace("/^(string@)/", "", $chopLine[2]);
         $xml->writeAttribute('type', 'string');
     } elseif (preg_match("/^(nil@nil$)/", $chopLine[2])) {
@@ -101,7 +101,7 @@ function varsymsym($xml, $chopLine, $order)
     #argument 2
     $xml->startElement('arg2');
     #o co sa jedna
-    if (preg_match("/^(GF@|LF@|TF@)/", $chopLine[2]) && preg_match("/@[a-zA-Z\_\-\$\&\%\*\!\?][a-zA-Z0-9\_\-\$\&\%\*\!\?]*$/", $chopLine[2])) {
+    if (preg_match("/^(GF@|LF@|TF@)(?!@)/", $chopLine[2]) && preg_match("/@[a-zA-Z\_\-\$\&\%\*\!\?][a-zA-Z0-9\_\-\$\&\%\*\!\?]*$/", $chopLine[2])) {
         $xml->writeAttribute('type', 'var');
     } elseif (preg_match("/^(int@[+-]?[0-9]+$)/", $chopLine[2])) {
         $chopLine[2] = preg_replace("/^(int@)/", "", $chopLine[2]);
@@ -109,7 +109,7 @@ function varsymsym($xml, $chopLine, $order)
     } elseif (preg_match("/^(bool@(true|false)$)/", $chopLine[2])) {
         $chopLine[2] = preg_replace("/^(bool@)/", "", $chopLine[2]);
         $xml->writeAttribute('type', 'bool');
-    } elseif (preg_match("/^(string@(?:[^\s\\#]|(\\[0-9]{3}))*$)/", $chopLine[2])) {
+    } elseif (preg_match("/^(string@(?:[^\s\#]|(\[0-9]{3}))*$)/", $chopLine[2]) && (preg_match_all('/\\\\/', $chopLine[2]) === (preg_match_all('/\\\\[0-9]{3}/', $chopLine[2])))) {
         $chopLine[2] = preg_replace("/^(string@)/", "", $chopLine[2]);
         $xml->writeAttribute('type', 'string');
     } elseif (preg_match("/^(nil@nil$)/", $chopLine[2])) {
@@ -126,7 +126,7 @@ function varsymsym($xml, $chopLine, $order)
     #argument 3
     $xml->startElement('arg3');
 
-    if (preg_match("/^(GF@|LF@|TF@)/", $chopLine[3]) && preg_match("/@[a-zA-Z\_\-\$\&\%\*\!\?][a-zA-Z0-9\_\-\$\&\%\*\!\?]*$/", $chopLine[3])) {
+    if (preg_match("/^(GF@|LF@|TF@)(?!@)/", $chopLine[3]) && preg_match("/@[a-zA-Z\_\-\$\&\%\*\!\?][a-zA-Z0-9\_\-\$\&\%\*\!\?]*$/", $chopLine[3])) {
         $xml->writeAttribute('type', 'var');
     } elseif (preg_match("/^(int@[+-]?[0-9]+$)/", $chopLine[3])) {
         $chopLine[3] = preg_replace("/^(int@)/", "", $chopLine[3]);
@@ -134,7 +134,7 @@ function varsymsym($xml, $chopLine, $order)
     } elseif (preg_match("/^(bool@(true|false)$)/", $chopLine[3])) {
         $chopLine[3] = preg_replace("/^(bool@)/", "", $chopLine[3]);
         $xml->writeAttribute('type', 'bool');
-    } elseif (preg_match("/^(string@(?:[^\s\\#]|(\\[0-9]{3}))*$)/", $chopLine[3])) {
+    } elseif (preg_match("/^(string@(?:[^\s\#]|(\[0-9]{3}))*$)/", $chopLine[3]) && (preg_match_all('/\\\\/', $chopLine[3]) === (preg_match_all('/\\\\[0-9]{3}/', $chopLine[3])))) {
         $chopLine[3] = preg_replace("/^(string@)/", "", $chopLine[3]);
         $xml->writeAttribute('type', 'string');
     } elseif (preg_match("/^(nil@nil$)/", $chopLine[3])) {
@@ -158,7 +158,7 @@ function variable($xml, $chopLine, $order)
     $xml->startElement('arg1');
     $xml->writeAttribute('type', 'var');
     #kontrola spravnosti premennej
-    if (preg_match("/^(GF@|LF@|TF@)/", $chopLine[1]) && preg_match("/@[a-zA-Z\_\-\$\&\%\*\!\?][a-zA-Z0-9\_\-\$\&\%\*\!\?]*$/", $chopLine[1])) {
+    if (preg_match("/^(GF@|LF@|TF@)(?!@)/", $chopLine[1]) && preg_match("/@[a-zA-Z\_\-\$\&\%\*\!\?][a-zA-Z0-9\_\-\$\&\%\*\!\?]*$/", $chopLine[1])) {
         $xml->text($chopLine[1]);
         $xml->endElement();
         $xml->endElement();
@@ -194,7 +194,7 @@ function symbol($xml, $chopLine, $order)
     $xml->writeAttribute('opcode', $chopLine[0]);
     #argument 1
     $xml->startElement('arg1');
-    if (preg_match("/^(GF@|LF@|TF@)/", $chopLine[1]) && preg_match("/@[a-zA-Z\_\-\$\&\%\*\!\?][a-zA-Z0-9\_\-\$\&\%\*\!\?]*$/", $chopLine[1])) {
+    if (preg_match("/^(GF@|LF@|TF@)(?!@)/", $chopLine[1]) && preg_match("/@[a-zA-Z\_\-\$\&\%\*\!\?][a-zA-Z0-9\_\-\$\&\%\*\!\?]*$/", $chopLine[1])) {
         $xml->writeAttribute('type', 'var');
     } elseif (preg_match("/^(int@[+-]?[0-9]+$)/", $chopLine[1])) {
         $chopLine[1] = preg_replace("/^(int@)/", "", $chopLine[1]);                      #odstranenie toho co netreba !!!!!!!!!!!!!!!!!!!!!!
@@ -202,7 +202,7 @@ function symbol($xml, $chopLine, $order)
     } elseif (preg_match("/^(bool@(true|false)$)/", $chopLine[1])) {
         $chopLine[1] = preg_replace("/^(bool@)/", "", $chopLine[1]);
         $xml->writeAttribute('type', 'bool');
-    } elseif (preg_match("/^(string@(?:[^\s\\#]|(\\[0-9]{3}))*$)/", $chopLine[1])) {
+    } elseif (preg_match("/^(string@(?:[^\s\#]|(\[0-9]{3}))*$)/", $chopLine[1]) && (preg_match_all('/\\\\/', $chopLine[1]) === (preg_match_all('/\\\\[0-9]{3}/', $chopLine[1])))) {
         $chopLine[1] = preg_replace("/^(string@)/", "", $chopLine[1]);
         $xml->writeAttribute('type', 'string');
     } elseif (preg_match("/^(nil@nil$)/", $chopLine[1])) {
@@ -230,7 +230,7 @@ function labsymsym($xml, $chopLine, $order)
     #argument 2
     $xml->startElement('arg2');
     #o co sa jedna
-    if (preg_match("/^(GF@|LF@|TF@)/", $chopLine[2]) && preg_match("/@[a-zA-Z\_\-\$\&\%\*\!\?][a-zA-Z0-9\_\-\$\&\%\*\!\?]*$/", $chopLine[2])) {
+    if (preg_match("/^(GF@|LF@|TF@)(?!@)/", $chopLine[2]) && preg_match("/@[a-zA-Z\_\-\$\&\%\*\!\?][a-zA-Z0-9\_\-\$\&\%\*\!\?]*$/", $chopLine[2])) {
         $xml->writeAttribute('type', 'var');
     } elseif (preg_match("/^(int@[+-]?[0-9]+$)/", $chopLine[2])) {
         $chopLine[2] = preg_replace("/^(int@)/", "", $chopLine[2]);
@@ -238,7 +238,7 @@ function labsymsym($xml, $chopLine, $order)
     } elseif (preg_match("/^(bool@(true|false)$)/", $chopLine[2])) {
         $chopLine[2] = preg_replace("/^(bool@)/", "", $chopLine[2]);
         $xml->writeAttribute('type', 'bool');
-    } elseif (preg_match("/^(string@(?:[^\s\\#]|(\\[0-9]{3}))*$)/", $chopLine[2])) {
+    } elseif (preg_match("/^(string@(?:[^\s\#]|(\[0-9]{3}))*$)/", $chopLine[2]) && (preg_match_all('/\\\\/', $chopLine[2]) === (preg_match_all('/\\\\[0-9]{3}/', $chopLine[2])))) {
         $chopLine[2] = preg_replace("/^(string@)/", "", $chopLine[2]);
         $xml->writeAttribute('type', 'string');
     } elseif (preg_match("/^(nil@nil$)/", $chopLine[2])) {
@@ -255,7 +255,7 @@ function labsymsym($xml, $chopLine, $order)
     #argument 3
     $xml->startElement('arg3');
 
-    if (preg_match("/^(GF@|LF@|TF@)/", $chopLine[3]) && preg_match("/@[a-zA-Z\_\-\$\&\%\*\!\?][a-zA-Z0-9\_\-\$\&\%\*\!\?]*$/", $chopLine[3])) {
+    if (preg_match("/^(GF@|LF@|TF@)(?!@)/", $chopLine[3]) && preg_match("/@[a-zA-Z\_\-\$\&\%\*\!\?][a-zA-Z0-9\_\-\$\&\%\*\!\?]*$/", $chopLine[3])) {
         $xml->writeAttribute('type', 'var');
     } elseif (preg_match("/^(int@[+-]?[0-9]+$)/", $chopLine[3])) {
         $chopLine[3] = preg_replace("/^(int@)/", "", $chopLine[3]);
@@ -263,7 +263,7 @@ function labsymsym($xml, $chopLine, $order)
     } elseif (preg_match("/^(bool@(true|false)$)/", $chopLine[3])) {
         $chopLine[3] = preg_replace("/^(bool@)/", "", $chopLine[3]);
         $xml->writeAttribute('type', 'bool');
-    } elseif (preg_match("/^(string@(?:[^\s\\#]|(\\[0-9]{3}))*$)/", $chopLine[3])) {
+    } elseif (preg_match("/^(string@(?:[^\s\#]|(\[0-9]{3}))*$)/", $chopLine[3]) && (preg_match_all('/\\\\/', $chopLine[3]) === (preg_match_all('/\\\\[0-9]{3}/', $chopLine[3])))) {
         $chopLine[3] = preg_replace("/^(string@)/", "", $chopLine[3]);
         $xml->writeAttribute('type', 'string');
     } elseif (preg_match("/^(nil@nil$)/", $chopLine[3])) {
@@ -333,7 +333,9 @@ while ($line = fgets(STDIN)) {
     }
 
     #rozdelenie line na chopLine
-    $chopLine = explode(' ', trim($line, "\n"));
+    $chopLine = preg_split('/\s+/', trim($line, "\n"));
+
+    #prve slovo da na velke znaky
     $chopLine[0] = strtoupper($chopLine[0]);
 
     switch ($chopLine[0]) {
