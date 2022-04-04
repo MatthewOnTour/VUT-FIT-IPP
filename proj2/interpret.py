@@ -1,12 +1,8 @@
 ######IMPORTS######
-from asyncore import read
-from curses import ERR
-from importlib.resources import path
-from multiprocessing.context import assert_spawning
+from ast import arg
 import re
 import argparse
 import sys
-from tarfile import GNU_FORMAT
 import xml.etree.ElementTree as ET
 from os.path import exists
 
@@ -53,6 +49,64 @@ class Instruction:
         self.name = name
         self.number = number
         self.args = []
+    
+    def findArgs(self, type, value):
+        self.args.append(arg(type, value))
+
+    def getName(self):
+        return self.name
+    
+    def getOrder(self):
+        return self.number
+
+    def argsSize(self):
+        return len(self.args)
+
+    def getArg1(self):
+        return self.args[0]
+
+    def getArg2(self):
+        return self.args[1]
+
+    def getArg3(self):
+        return self.args[2]
+
+#####VALIDATION OF ARGs######
+
+
+
+######CHECK ARGs######
+
+def checkVar(names):
+    if names.args[0].type != "var":
+        print("Invalid argument try -> VAR \n", file=sys.stderr)
+        exit(ERR_WRG_XML)
+    #check
+
+def checkLabel(names):
+    if names.args[0].type != "label":
+        print("Invalid argument try -> LABEL \n", file=sys.stderr)
+        exit(ERR_WRG_XML)
+    #check
+
+def checkSymb(names):
+    if names.args[0].type != "var" or names.args[0].type != "string" or names.args[0].type != "bool" or names.args[0].type != "int" or names.args[0].type != "nil":
+        print("Invalid argument try -> SYMBOL \n", file=sys.stderr)
+        exit(ERR_WRG_XML)
+    #check
+
+def checkVarSymb(names):
+    if names.args[0].type != "var":
+        print("Invalid argument try -> VAR \n", file=sys.stderr)
+        exit(ERR_WRG_XML)
+    #check
+    if names.args[0].type != "var" or names.args[0].type != "string" or names.args[0].type != "bool" or names.args[0].type != "int" or names.args[0].type != "nil":
+        print("Invalid argument try -> SYMBOL \n", file=sys.stderr)
+        exit(ERR_WRG_XML)
+    #check
+
+
+
 
 ######FUNCTIONS######
 
@@ -61,6 +115,131 @@ def checkArgCount(expect, real):
         print("Invalid number of arfuments \n", file=sys.stderr)
         exit(ERR_WRG_XML)
 
+def chcekInstruction(names):
+    ##NO ARG
+    if names.name == "CREATEFRAME":
+        checkArgCount(0, len(names.args))
+    elif names.name == "PUSHFRAME":
+        checkArgCount(0, len(names.args))
+    elif names.name == "POPFRAME":
+        checkArgCount(0, len(names.args))
+    elif names.name == "RETURN":
+        checkArgCount(0, len(names.args))
+    elif names.name == "BREAK":
+        checkArgCount(0, len(names.args))
+
+    ##ONE ARG -> VAR
+    elif names.name == "DEFVAR":
+        checkArgCount(1, len(names.args))
+        #check
+    elif names.name == "POPS":
+        checkArgCount(1, len(names.args))
+        #check
+
+    ##ONE ARG -> LABEL
+    elif names.name == "CALL":
+        checkArgCount(1, len(names.args))
+        #check
+    elif names.name == "LABEL":
+        checkArgCount(1, len(names.args))
+        #check
+    elif names.name == "JUMP":
+        checkArgCount(1, len(names.args))
+        #check
+
+    ##ONE ARG -> SYMB
+    elif names.name == "PUSHS":
+        checkArgCount(1, len(names.args))
+        #check
+    elif names.name == "WRITE":
+        checkArgCount(1, len(names.args))
+        #check
+    elif names.name == "EXIT":
+        checkArgCount(1, len(names.args))
+        #check
+    elif names.name == "DPRINT":
+        checkArgCount(1, len(names.args))
+        #check
+
+    ##TWO ARG -> VAR, SYMB
+    elif names.name == "MOVE":
+        checkArgCount(2, len(names.args))
+        #check
+    elif names.name == "NOT":
+        checkArgCount(2, len(names.args))
+        #check
+    elif names.name == "INT2CHAR":
+        checkArgCount(2, len(names.args))
+        #check
+    elif names.name == "STRLEN":
+        checkArgCount(2, len(names.args))
+        #check
+    elif names.name == "TYPE":
+        checkArgCount(2, len(names.args))
+        #check
+
+    ##TWO ARG -> VAR, TYPE
+    elif names.name == "READ":
+        checkArgCount(2, len(names.args))
+        #check
+    
+    ##THREE ARG -> LABEL, SYMB, SYMB
+    elif names.name == "JUMPIFEQ":
+        checkArgCount(3, len(names.args))
+        #check
+    elif names.name == "JUMPIFNEQ":
+        checkArgCount(3, len(names.args))
+        #check
+
+    ##THREE ARG -> VAR, SYMB, SYMB
+    elif names.name == "ADD":
+        checkArgCount(3, len(names.args))
+        #check
+    elif names.name == "SUB":
+        checkArgCount(3, len(names.args))
+        #check
+    elif names.name == "MUL":
+        checkArgCount(3, len(names.args))
+        #check
+    elif names.name == "IDIV":
+        checkArgCount(3, len(names.args))
+        #check
+    elif names.name == "LT":
+        checkArgCount(3, len(names.args))
+        #check
+    elif names.name == "GT":
+        checkArgCount(3, len(names.args))
+        #check
+    elif names.name == "EQ":
+        checkArgCount(3, len(names.args))
+        #check
+    elif names.name == "AND":
+        checkArgCount(3, len(names.args))
+        #check
+    elif names.name == "OR":
+        checkArgCount(3, len(names.args))
+        #check
+    elif names.name == "OR":
+        checkArgCount(3, len(names.args))
+        #check
+    elif names.name == "NOT":
+        checkArgCount(3, len(names.args))
+        #check
+    elif names.name == "STRI2INT":
+        checkArgCount(3, len(names.args))
+        #check
+    elif names.name == "CONCAT":
+        checkArgCount(3, len(names.args))
+        #check
+    elif names.name == "GETCHAR":
+        checkArgCount(3, len(names.args))
+        #check
+    elif names.name == "SETCHAR":
+        checkArgCount(3, len(names.args))
+        #check
+    else:
+        print("Instruction is non valid \n", file=sys.stderr)
+        exit(ERR_WRG_XML)
 
 ######MAIN######
 
@@ -72,14 +251,14 @@ argParser.add_argument("--source", metavar="FILE", help="Input file containing X
 arguments = argParser.parse_args()
 
 if arguments.input is None and arguments.source is None:
-    print("ilegal combination of param", file=sys.stderr)
+    print("ilegal combination of param \n", file=sys.stderr)
     exit(ERR_COMB_IN)
 
 if arguments.input is not None:
     if exists(arguments.input):
         inputFile = arguments.input
     else:
-        print("error with opening input file", file=sys.stderr)
+        print("error with opening input file \n", file=sys.stderr)
         exit(ERR_OPEN_FILE)
 else:
     inputFile = sys.stdin
@@ -88,7 +267,7 @@ if arguments.source is not None:
     if exists(arguments.source):
         sourceFile = arguments.source
     else:
-        print("error with opening source file", file=sys.stderr)
+        print("error with opening source file \n", file=sys.stderr)
         exit(ERR_OPEN_FILE)
 else:
     sourceFile = sys.stdin
@@ -105,9 +284,14 @@ try:
     else:
         tree = ET.parse(sys.stdin)
 except:
-    print("error with opening XML", file=sys.stderr)
+    print("error with opening XML \n", file=sys.stderr)
     exit(ERR_FOR_XML)
 
 
 root = tree.getroot()
+
+####MANY IF/ELIF aka SWITCH####
+for i in instructions:
+    chcekInstruction(i)
+
 
