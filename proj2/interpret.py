@@ -75,6 +75,7 @@ class Instruction:
 
 
 
+
 ######CHECK ARGs######
 
 def checkVar(names):
@@ -91,7 +92,7 @@ def checkLabel(names):
 
 def checkSymb(names):
     if names.args[0].type != "var" or names.args[0].type != "string" or names.args[0].type != "bool" or names.args[0].type != "int" or names.args[0].type != "nil":
-        print("Invalid argument try -> SYMBOL \n", file=sys.stderr)
+        print("Invalid argument try -> SYMB \n", file=sys.stderr)
         exit(ERR_WRG_XML)
     #check
 
@@ -100,12 +101,48 @@ def checkVarSymb(names):
         print("Invalid argument try -> VAR \n", file=sys.stderr)
         exit(ERR_WRG_XML)
     #check
-    if names.args[0].type != "var" or names.args[0].type != "string" or names.args[0].type != "bool" or names.args[0].type != "int" or names.args[0].type != "nil":
-        print("Invalid argument try -> SYMBOL \n", file=sys.stderr)
+    if names.args[1].type != "var" or names.args[1].type != "string" or names.args[1].type != "bool" or names.args[1].type != "int" or names.args[1].type != "nil":
+        print("Invalid argument try -> SYMB \n", file=sys.stderr)
         exit(ERR_WRG_XML)
     #check
 
+def checkVarType(names):
+    if names.args[0].type != "var":
+        print("Invalid argument try -> VAR \n", file=sys.stderr)
+        exit(ERR_WRG_XML)
+    #check
+    if names.args[1].type != "string" or names.args[1].type != "bool" or names.args[1].type != "int":
+        print("Invalid argument try -> TYPE \n", file=sys.stderr)
+        exit(ERR_WRG_XML)
+    #check
 
+def checkLabelSymbSymb(names):
+    if names.args[0].type != "label":
+        print("Invalid argument try -> LABEL \n", file=sys.stderr)
+        exit(ERR_WRG_XML)
+    #check
+    if names.args[1].type != "var" or names.args[1].type != "string" or names.args[1].type != "bool" or names.args[1].type != "int" or names.args[1].type != "nil":
+        print("Invalid argument try -> SYMB \n", file=sys.stderr)
+        exit(ERR_WRG_XML)
+    #check
+    if names.args[2].type != "var" or names.args[2].type != "string" or names.args[2].type != "bool" or names.args[2].type != "int" or names.args[2].type != "nil":
+        print("Invalid argument try -> SYMB \n", file=sys.stderr)
+        exit(ERR_WRG_XML)
+    #check
+
+def checkVarSymbSymb(names):
+    if names.args[0].type != "var":
+        print("Invalid argument try -> VAR \n", file=sys.stderr)
+        exit(ERR_WRG_XML)
+    #check
+    if names.args[1].type != "var" or names.args[1].type != "string" or names.args[1].type != "bool" or names.args[1].type != "int" or names.args[1].type != "nil":
+        print("Invalid argument try -> SYMB \n", file=sys.stderr)
+        exit(ERR_WRG_XML)
+    #check
+    if names.args[2].type != "var" or names.args[2].type != "string" or names.args[2].type != "bool" or names.args[2].type != "int" or names.args[2].type != "nil":
+        print("Invalid argument try -> SYMB \n", file=sys.stderr)
+        exit(ERR_WRG_XML)
+    #check
 
 
 ######FUNCTIONS######
