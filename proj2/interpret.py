@@ -29,8 +29,8 @@ inputFile = ""
 call = list()
 call_dead = list()
 label = dict()
-GF = dict()
 TF = dict()
+GF = dict()
 LF = []
 
 ######CLASSES######
@@ -74,16 +74,18 @@ def validOthers(validit):
             print("Invalid argument int \n", file=sys.stderr)
             exit(ERR_WRG_XML)
     if validit.type == "string":
-        if re.match(r"(\\\\[^0-9])|(\\\\[0-9][^0-9])|(\\\\[0-9][0-9][^0-9])|(\\\\$)", validit.value):
-            print("Invalid argument string \n", file=sys.stderr)
-            exit(ERR_WRG_XML)
+        if validit.value is not None:
+            if re.match(r"(\\\\[^0-9])|(\\\\[0-9][^0-9])|(\\\\[0-9][0-9][^0-9])|(\\\\$)", validit.value):
+                print("Invalid argument string \n", file=sys.stderr)
+                exit(ERR_WRG_XML)
+            
     if validit.type == "bool":
         if not validit.value == "true" or validit.value == "false":
             print("Invalid argument bool \n", file=sys.stderr)
             exit(ERR_WRG_XML)
 
 def validSymb(validit):
-    if validit.item == "var":
+    if validit.type == "var":
         validVar(validit)
     else:
         validOthers(validit)
@@ -97,10 +99,10 @@ def validType(validit):
 ######CHECK ARGs######
 
 def checkVar(names):
-    if names.args[0].type != "var":
+    if names.type != "var":
         print("Invalid argument try -> VAR \n", file=sys.stderr)
         exit(ERR_WRG_XML)
-    validVar(names.args[0])
+    validVar(names)
 
 def checkLabel(names):
     if names.args[0].type != "label":
@@ -109,10 +111,10 @@ def checkLabel(names):
     validLabel(names.args[0])
 
 def checkSymb(names):
-    if not(re.match(r"^(var|string|bool|int|nil)$", names.args[0].type)):
+    if not(re.match(r"^(var|string|bool|int|nil)$", names.type)):
         print("Invalid argument try -> SYMB \n", file=sys.stderr)
         exit(ERR_WRG_XML)
-    validSymb(names.args[0])
+    validSymb(names)
 
 def checkVarSymb(names):
     if names.args[0].type != "var":
@@ -138,7 +140,7 @@ def checkLabelSymbSymb(names):
     if names.args[0].type != "label":
         print("Invalid argument try -> LABEL \n", file=sys.stderr)
         exit(ERR_WRG_XML)
-    checkLabel(names.args[0])
+    checkLabel(names)
     if not(re.match(r"^(var|string|bool|int|nil)$", names.args[1].type)):
         print("Invalid argument try -> SYMB \n", file=sys.stderr)
         exit(ERR_WRG_XML)
@@ -187,10 +189,10 @@ def checkInstruction(names):
     ##ONE ARG -> VAR
     elif names.name == "DEFVAR":
         checkArgCount(1, len(names.args))
-        checkVar(names)
+        checkVar(names.args[0])
     elif names.name == "POPS":
         checkArgCount(1, len(names.args))
-        checkVar(names)
+        checkVar(names.args[0])
 
     ##ONE ARG -> LABEL
     elif names.name == "CALL":
@@ -206,16 +208,16 @@ def checkInstruction(names):
     ##ONE ARG -> SYMB
     elif names.name == "PUSHS":
         checkArgCount(1, len(names.args))
-        checkSymb(names)
+        checkSymb(names.args[0])
     elif names.name == "WRITE":
         checkArgCount(1, len(names.args))
-        checkSymb(names)
+        checkSymb(names.args[0])
     elif names.name == "EXIT":
         checkArgCount(1, len(names.args))
-        checkSymb(names)
+        checkSymb(names.args[0])
     elif names.name == "DPRINT":
         checkArgCount(1, len(names.args))
-        checkSymb(names)
+        checkSymb(names.args[0])
 
     ##TWO ARG -> VAR, SYMB
     elif names.name == "MOVE":
@@ -329,8 +331,6 @@ else:
     sourceFile = sys.stdin
 
 
-
-
 ###LOADING XML###
 tree = None
 try:
@@ -360,12 +360,137 @@ except:
   print("Error occured when sorting \n", file=sys.stderr)
   exit(ERR_WRG_XML)
 
+checkOrder = 0
+
 for child in root:
-    x = Instruction(child.attrib['opcode'], child.attrib['order'])
-    for obama in child:
-        x.argsCreate(obama.attrib['type'], obama.text)
-    checkInstruction(x)
+    if checkOrder == child.attrib['order']:
+        print("wrong order in XML \n", file=sys.stderr)
+        exit(ERR_WRG_XML)
+    checkOrder = child.attrib['order']
 
 
-echo("blyat")
-exit(0)
+    instructions.append(Instruction(child.attrib['opcode'], child.attrib['order']))
+    for cycle in child:
+        instructions[-1].argsCreate(cycle.attrib['type'], cycle.text)
+    checkInstruction(instructions[-1])
+
+    if child.attrib['opcode'] == "LABEL":
+        if instructions[-1].args[0].value in label.keys():
+            print("LABEL duplicate was found \n", file=sys.stderr)
+            exit(ERR_WRG_XML)
+        label[instructions[-1].args[0].value] = child.attrib['order']
+
+#####MAIN FUNCTION OF INTERPRET#####
+
+def interpretMainFunction(instr):
+    if instr.name.upper() == "MOVE":
+        print("hallo")
+
+    elif instr.name.upper() == "CREATEFRAME":
+        print("hallo")
+
+    elif instr.name.upper() == "PUSHFRAME":
+        print("hallo")
+
+    elif instr.name.upper() == "POPFRAME":
+        print("hallo")
+
+    elif instr.name.upper() == "DEFVAR":
+        print("hallo")
+
+    elif instr.name.upper() == "CALL":
+        print("hallo")
+
+    elif instr.name.upper() == "RETURN":
+        print("hallo")
+
+    elif instr.name.upper() == "PUSHS":
+        print("hallo")
+
+    elif instr.name.upper() == "POPS":
+        print("hallo")
+
+    elif instr.name.upper() == "ADD":
+        print("hallo")
+
+    elif instr.name.upper() == "SUB":
+        print("hallo")
+
+    elif instr.name.upper() == "MUL":
+        print("hallo")
+
+    elif instr.name.upper() == "IDIV":
+        print("hallo")
+
+    elif instr.name.upper() == "LT":
+        print("hallo")
+
+    elif instr.name.upper() == "GT":
+        print("hallo")
+
+    elif instr.name.upper() == "EQ":
+        print("hallo")
+
+    elif instr.name.upper() == "ADD":
+        print("hallo")
+
+    elif instr.name.upper() == "OR":
+        print("hallo")
+        
+    elif instr.name.upper() == "NOT":
+        print("hallo")
+
+    elif instr.name.upper() == "INT2CHAR":
+        print("hallo")
+        
+    elif instr.name.upper() == "STR2INT":
+        print("hallo")
+
+    elif instr.name.upper() == "READ":
+        print("hallo")
+
+    elif instr.name.upper() == "WRITE":
+        print("hallo")
+
+    elif instr.name.upper() == "CONCAT":
+        print("hallo")
+
+    elif instr.name.upper() == "STRLEN":
+        print("hallo")
+
+    elif instr.name.upper() == "GETCHAR":
+        print("hallo")
+
+    elif instr.name.upper() == "SETCHAR":
+        print("hallo")
+
+    elif instr.name.upper() == "TYPE":
+        print("hallo")
+
+    elif instr.name.upper() == "LABEL":
+        print("hallo")
+
+    elif instr.name.upper() == "JUMP":
+        print("hallo")
+
+    elif instr.name.upper() == "JUMPIFEQ":
+        print("hallo")
+        
+    elif instr.name.upper() == "EXIT":
+        print("hallo")
+
+    elif instr.name.upper() == "DPRINT":
+        print("hallo")
+
+    elif instr.name.upper() == "BREAK":
+        print("hallo")
+
+#####INTREPRET#####
+i=0
+while i < len(instructions):
+    interpretMainFunction(instructions[i])
+    i += 1
+
+
+
+print("blyat")
