@@ -1,5 +1,5 @@
 ######IMPORTS######
-from ast import arg
+
 import re
 import argparse
 import sys
@@ -49,32 +49,50 @@ class Instruction:
         self.name = name
         self.number = number
         self.args = []
-    
-    def findArgs(self, type, value):
-        self.args.append(arg(type, value))
-
-    def getName(self):
-        return self.name
-    
-    def getOrder(self):
-        return self.number
-
-    def argsSize(self):
-        return len(self.args)
-
-    def getArg1(self):
-        return self.args[0]
-
-    def getArg2(self):
-        return self.args[1]
-
-    def getArg3(self):
-        return self.args[2]
-
-#####VALIDATION OF ARGs######
+    def argsCreate(self, type, value):
+        self.args.append(Argument(type, value))
+        
 
 
+#####VALIDATION OF ARGs###### neviem ci je potrebna :shrug:
+def validVar(validit):
+    if not re.match(r"^(GF@|LF@|TF@)(?!@)[a-zA-Z\_\-\$\&\%\*\!\?][a-zA-Z0-9\_\-\$\&\%\*\!\?]*$", validit.value):
+        print("Invalid argument try -> VAR \n", file=sys.stderr)
+        exit(ERR_WRG_XML)
 
+def validLabel(validit):
+    if not re.match(r"^[a-zA-Z\_\-\$\&\%\*\!\?][a-zA-Z0-9\_\-\$\&\%\*\!\?]*$", validit.value):
+        print("Invalid argument try -> LABEL \n", file=sys.stderr)
+        exit(ERR_WRG_XML)
+
+def validOthers(validit):
+    if validit.type == "nil":
+        print("Invalid argument nil \n", file=sys.stderr)
+        exit(ERR_WRG_XML)
+    if validit.type == "int":
+        if re.search(r"[^\d-]", validit.item):
+            print("Invalid argument int \n", file=sys.stderr)
+            exit(ERR_WRG_XML)
+    if validit.type == "string":
+        if re.match(r"(\\\\[^0-9])|(\\\\[0-9][^0-9])|(\\\\[0-9][0-9][^0-9])|(\\\\$)", validit.value):
+            print("Invalid argument string \n", file=sys.stderr)
+            exit(ERR_WRG_XML)
+    if validit.type == "bool":
+        if not validit.value == "true" or validit.value == "false":
+            print("Invalid argument bool \n", file=sys.stderr)
+            exit(ERR_WRG_XML)
+
+def validSymb(validit):
+    if validit.item == "var":
+        validVar(validit)
+    else:
+        validOthers(validit)
+
+
+def validType(validit):
+    if not re.match(r"^(string|int|bool)$", validit.value):
+        print("Invalid argument Type \n", file=sys.stderr)
+        exit(ERR_WRG_XML)
 
 ######CHECK ARGs######
 
@@ -82,77 +100,78 @@ def checkVar(names):
     if names.args[0].type != "var":
         print("Invalid argument try -> VAR \n", file=sys.stderr)
         exit(ERR_WRG_XML)
-    #check
+    validVar(names.args[0])
 
 def checkLabel(names):
     if names.args[0].type != "label":
         print("Invalid argument try -> LABEL \n", file=sys.stderr)
         exit(ERR_WRG_XML)
-    #check
+    validLabel(names.args[0])
 
 def checkSymb(names):
-    if names.args[0].type != "var" or names.args[0].type != "string" or names.args[0].type != "bool" or names.args[0].type != "int" or names.args[0].type != "nil":
+    if not(re.match(r"^(var|string|bool|int|nil)$", names.args[0].type)):
         print("Invalid argument try -> SYMB \n", file=sys.stderr)
         exit(ERR_WRG_XML)
-    #check
+    validSymb(names.args[0])
 
 def checkVarSymb(names):
     if names.args[0].type != "var":
         print("Invalid argument try -> VAR \n", file=sys.stderr)
         exit(ERR_WRG_XML)
-    #check
-    if names.args[1].type != "var" or names.args[1].type != "string" or names.args[1].type != "bool" or names.args[1].type != "int" or names.args[1].type != "nil":
+    validVar(names.args[0])
+    if not(re.match(r"^(var|string|bool|int|nil)$", names.args[1].type)):
         print("Invalid argument try -> SYMB \n", file=sys.stderr)
         exit(ERR_WRG_XML)
-    #check
+    validSymb(names.args[1])
 
 def checkVarType(names):
     if names.args[0].type != "var":
         print("Invalid argument try -> VAR \n", file=sys.stderr)
         exit(ERR_WRG_XML)
-    #check
-    if names.args[1].type != "string" or names.args[1].type != "bool" or names.args[1].type != "int":
+    validVar(names.args[0])
+    if not(re.match(r"^(string|bool|int)$", names.args[1].type)):
         print("Invalid argument try -> TYPE \n", file=sys.stderr)
         exit(ERR_WRG_XML)
-    #check
+    validType(names.args[1])
 
 def checkLabelSymbSymb(names):
     if names.args[0].type != "label":
         print("Invalid argument try -> LABEL \n", file=sys.stderr)
         exit(ERR_WRG_XML)
-    #check
-    if names.args[1].type != "var" or names.args[1].type != "string" or names.args[1].type != "bool" or names.args[1].type != "int" or names.args[1].type != "nil":
+    checkLabel(names.args[0])
+    if not(re.match(r"^(var|string|bool|int|nil)$", names.args[1].type)):
         print("Invalid argument try -> SYMB \n", file=sys.stderr)
         exit(ERR_WRG_XML)
-    #check
-    if names.args[2].type != "var" or names.args[2].type != "string" or names.args[2].type != "bool" or names.args[2].type != "int" or names.args[2].type != "nil":
+    checkSymb(names.args[1])
+    if not(re.match(r"^(var|string|bool|int|nil)$", names.args[2].type)):
         print("Invalid argument try -> SYMB \n", file=sys.stderr)
         exit(ERR_WRG_XML)
-    #check
+    checkSymb(names.args[2])
 
 def checkVarSymbSymb(names):
     if names.args[0].type != "var":
         print("Invalid argument try -> VAR \n", file=sys.stderr)
         exit(ERR_WRG_XML)
-    #check
-    if names.args[1].type != "var" or names.args[1].type != "string" or names.args[1].type != "bool" or names.args[1].type != "int" or names.args[1].type != "nil":
+    checkVar(names.args[0])
+    if not(re.match(r"^(var|string|bool|int|nil)$", names.args[1].type)):
         print("Invalid argument try -> SYMB \n", file=sys.stderr)
         exit(ERR_WRG_XML)
-    #check
-    if names.args[2].type != "var" or names.args[2].type != "string" or names.args[2].type != "bool" or names.args[2].type != "int" or names.args[2].type != "nil":
+    checkSymb(names.args[1])
+    if not(re.match(r"^(var|string|bool|int|nil)$", names.args[2].type)):
         print("Invalid argument try -> SYMB \n", file=sys.stderr)
         exit(ERR_WRG_XML)
-    #check
+    checkSymb(names.args[2])
 
 
 ######FUNCTIONS######
 
 def checkArgCount(expect, real):
     if expect != real:
-        print("Invalid number of arfuments \n", file=sys.stderr)
+        print("Invalid number of arguments \n", file=sys.stderr)
         exit(ERR_WRG_XML)
 
-def chcekInstruction(names):
+
+def checkInstruction(names):
     ##NO ARG
     if names.name == "CREATEFRAME":
         checkArgCount(0, len(names.args))
@@ -168,112 +187,112 @@ def chcekInstruction(names):
     ##ONE ARG -> VAR
     elif names.name == "DEFVAR":
         checkArgCount(1, len(names.args))
-        #check
+        checkVar(names)
     elif names.name == "POPS":
         checkArgCount(1, len(names.args))
-        #check
+        checkVar(names)
 
     ##ONE ARG -> LABEL
     elif names.name == "CALL":
         checkArgCount(1, len(names.args))
-        #check
+        checkLabel(names)
     elif names.name == "LABEL":
         checkArgCount(1, len(names.args))
-        #check
+        checkLabel(names)
     elif names.name == "JUMP":
         checkArgCount(1, len(names.args))
-        #check
+        checkLabel(names)
 
     ##ONE ARG -> SYMB
     elif names.name == "PUSHS":
         checkArgCount(1, len(names.args))
-        #check
+        checkSymb(names)
     elif names.name == "WRITE":
         checkArgCount(1, len(names.args))
-        #check
+        checkSymb(names)
     elif names.name == "EXIT":
         checkArgCount(1, len(names.args))
-        #check
+        checkSymb(names)
     elif names.name == "DPRINT":
         checkArgCount(1, len(names.args))
-        #check
+        checkSymb(names)
 
     ##TWO ARG -> VAR, SYMB
     elif names.name == "MOVE":
         checkArgCount(2, len(names.args))
-        #check
+        checkVarSymb(names)
     elif names.name == "NOT":
         checkArgCount(2, len(names.args))
-        #check
+        checkVarSymb(names)
     elif names.name == "INT2CHAR":
         checkArgCount(2, len(names.args))
-        #check
+        checkVarSymb(names)
     elif names.name == "STRLEN":
         checkArgCount(2, len(names.args))
-        #check
+        checkVarSymb(names)
     elif names.name == "TYPE":
         checkArgCount(2, len(names.args))
-        #check
+        checkVarSymb(names)
 
     ##TWO ARG -> VAR, TYPE
     elif names.name == "READ":
         checkArgCount(2, len(names.args))
-        #check
+        checkVarType(names)
     
     ##THREE ARG -> LABEL, SYMB, SYMB
     elif names.name == "JUMPIFEQ":
         checkArgCount(3, len(names.args))
-        #check
+        checkLabelSymbSymb(names)
     elif names.name == "JUMPIFNEQ":
         checkArgCount(3, len(names.args))
-        #check
+        checkLabelSymbSymb(names)
 
     ##THREE ARG -> VAR, SYMB, SYMB
     elif names.name == "ADD":
         checkArgCount(3, len(names.args))
-        #check
+        checkVarSymbSymb(names)
     elif names.name == "SUB":
         checkArgCount(3, len(names.args))
-        #check
+        checkVarSymbSymb(names)
     elif names.name == "MUL":
         checkArgCount(3, len(names.args))
-        #check
+        checkVarSymbSymb(names)
     elif names.name == "IDIV":
         checkArgCount(3, len(names.args))
-        #check
+        checkVarSymbSymb(names)
     elif names.name == "LT":
         checkArgCount(3, len(names.args))
-        #check
+        checkVarSymbSymb(names)
     elif names.name == "GT":
         checkArgCount(3, len(names.args))
-        #check
+        checkVarSymbSymb(names)
     elif names.name == "EQ":
         checkArgCount(3, len(names.args))
-        #check
+        checkVarSymbSymb(names)
     elif names.name == "AND":
         checkArgCount(3, len(names.args))
-        #check
+        checkVarSymbSymb(names)
     elif names.name == "OR":
         checkArgCount(3, len(names.args))
-        #check
+        checkVarSymbSymb(names)
     elif names.name == "OR":
         checkArgCount(3, len(names.args))
-        #check
+        checkVarSymbSymb(names)
     elif names.name == "NOT":
         checkArgCount(3, len(names.args))
-        #check
+        checkVarSymbSymb(names)
     elif names.name == "STRI2INT":
         checkArgCount(3, len(names.args))
-        #check
+        checkVarSymbSymb(names)
     elif names.name == "CONCAT":
         checkArgCount(3, len(names.args))
-        #check
+        checkVarSymbSymb(names)
     elif names.name == "GETCHAR":
         checkArgCount(3, len(names.args))
-        #check
+        checkVarSymbSymb(names)
     elif names.name == "SETCHAR":
         checkArgCount(3, len(names.args))
-        #check
+        checkVarSymbSymb(names)
     else:
         print("Instruction is non valid \n", file=sys.stderr)
         exit(ERR_WRG_XML)
@@ -328,7 +347,25 @@ except:
 root = tree.getroot()
 
 ####MANY IF/ELIF aka SWITCH####
-for i in instructions:
-    chcekInstruction(i)
+if root.tag != "program" or 'language' not in root.attrib.keys():
+    print("missing atribute \n", file=sys.stderr)
+    exit(ERR_WRG_XML)
+if root.attrib['language'] != "IPPcode22":
+    print("Invalid xml language \n", file=sys.stderr)
+    exit(ERR_WRG_XML)
+
+try:
+  root[:] = sorted(root, key=lambda child: (child.tag, int(child.get('order'))))
+except:
+  print("Error occured when sorting \n", file=sys.stderr)
+  exit(ERR_WRG_XML)
+
+for child in root:
+    x = Instruction(child.attrib['opcode'], child.attrib['order'])
+    for obama in child:
+        x.argsCreate(obama.attrib['type'], obama.text)
+    checkInstruction(x)
 
 
+echo("blyat")
+exit(0)
