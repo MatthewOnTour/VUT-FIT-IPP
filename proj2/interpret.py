@@ -485,12 +485,13 @@ def interpretMainFunction(instr):
     elif instr.name.upper() == "BREAK":
         print("hallo")
 
+    else:
+        print("Instruction was not found \n", file=sys.stderr)
+        exit(ERR_WRG_XML)
+
+
 #####INTREPRET#####
 i=0
 while i < len(instructions):
     interpretMainFunction(instructions[i])
     i += 1
-
-
-
-print("blyat")
