@@ -1,8 +1,10 @@
 ######IMPORTS######
 
+from nis import match
 import re
 import argparse
 import sys
+from unicodedata import name
 import xml.etree.ElementTree as ET
 from os.path import exists
 
@@ -32,6 +34,8 @@ label = dict()
 TF = dict()
 GF = dict()
 LF = []
+TFFlag = False
+
 
 ######CLASSES######
 class Variable:
@@ -379,24 +383,110 @@ for child in root:
             print("LABEL duplicate was found \n", file=sys.stderr)
             exit(ERR_WRG_XML)
         label[instructions[-1].args[0].value] = child.attrib['order']
+#####FIND VAR#####
+def findVar(nameVar):
+    global TFFlag
+    match = re.match(r'^(GF|LF|TF)@(.*)$', nameVar)
+    var = match.group(1)
+    name = match.group(2)
+    if var == 'GF':
+        if name in GF.keys():
+            print("GF is existing \n", file=sys.stderr)
+            exit(ERR_SEM_CHECK)
+        if name in GF:
+            return GF[name]
+        else:
+            print("non existing GF \n", file=sys.stderr)
+            exit(ERR_FOR_XML)
+    if var == 'TF':
+        if name in TF.keys():
+            print("TF is existing \n", file=sys.stderr)
+            exit(ERR_SEM_CHECK)
+
+        if TFFlag == False:
+            print("TF is undefined \n", file=sys.stderr)
+            exit(ERR_FRAME_NON)
+
+        if name in TF:
+            return TF[name]
+        else:
+            print("non existing TF \n", file=sys.stderr)
+            exit(ERR_FOR_XML)
+    if var == 'LF':
+        if len(LF) == 0:
+            print("LF is undefined \n", file=sys.stderr)
+            exit(ERR_FRAME_NON)
+        if name in LF[-1].keys():
+            print("LF is existing \n", file=sys.stderr)
+            exit(ERR_SEM_CHECK)
+        if name in LF[-1]:
+            return LF[name]
+        else:
+            print("non existing LF \n", file=sys.stderr)
+            exit(ERR_FOR_XML)
+
 
 #####MAIN FUNCTION OF INTERPRET#####
 
 def interpretMainFunction(instr):
+    global TF
+    global LF
+    global TFFlag
+
+
     if instr.name.upper() == "MOVE":
         print("hallo")
 
     elif instr.name.upper() == "CREATEFRAME":
-        print("hallo")
+        TF.clear()
+        TFFlag = True
 
     elif instr.name.upper() == "PUSHFRAME":
-        print("hallo")
+        if TFFlag == False:
+            print("cant push, TF is undefined \n", file=sys.stderr)
+            exit(ERR_FRAME_NON)
+        LF.append(TF.copy())
+        TF.clear()
+        TFFlag = False
 
     elif instr.name.upper() == "POPFRAME":
-        print("hallo")
+        if len(LF) == 0:
+            print("LF is undefined \n", file=sys.stderr)
+            exit(ERR_FRAME_NON)
+        TF = LF.copy()
+        TFFlag = True
+        TF.pop()
 
     elif instr.name.upper() == "DEFVAR":
-        print("hallo")
+        match = re.match(r'^(GF|LF|TF)@(.*)$', instr.args[0].value)
+        var = match.group(1)
+        name = match.group(2)
+        if var == 'GF':
+            if name in GF.keys():
+                print("GF is existing \n", file=sys.stderr)
+                exit(ERR_SEM_CHECK)
+            GF.update({name:var})
+           
+        
+        elif var == 'TF':
+            if name in TF.keys():
+                print("TF is existing \n", file=sys.stderr)
+                exit(ERR_SEM_CHECK)
+            if TFFlag == False:
+                print("TF is undefined \n", file=sys.stderr)
+                exit(ERR_FRAME_NON)
+            TF.update({name: var})
+            
+
+        elif var == 'LF':
+            if len(LF) == 0:
+                print("LF is undefined \n", file=sys.stderr)
+                exit(ERR_FRAME_NON)
+            if name in LF[-1].keys():
+                print("LF is existing \n", file=sys.stderr)
+                exit(ERR_SEM_CHECK)
+            LF[-1].update({name: var})
+           
 
     elif instr.name.upper() == "CALL":
         print("hallo")
