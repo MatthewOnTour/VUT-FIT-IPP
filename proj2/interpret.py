@@ -1,10 +1,10 @@
 ######IMPORTS######
 
-from nis import match
+from ast import arg
 import re
 import argparse
+from statistics import variance
 import sys
-from unicodedata import name
 import xml.etree.ElementTree as ET
 from os.path import exists
 
@@ -34,6 +34,7 @@ label = dict()
 TF = dict()
 GF = dict()
 LF = []
+dataStack = []
 TFFlag = False
 
 
@@ -74,7 +75,7 @@ def validOthers(validit):
         print("Invalid argument nil \n", file=sys.stderr)
         exit(ERR_WRG_XML)
     if validit.type == "int":
-        if re.search(r"[^\d-]", validit.item):
+        if re.search(r"^(-){0,1}([0-9]*)$", validit.value) is None:
             print("Invalid argument int \n", file=sys.stderr)
             exit(ERR_WRG_XML)
     if validit.type == "string":
@@ -84,7 +85,7 @@ def validOthers(validit):
                 exit(ERR_WRG_XML)
             
     if validit.type == "bool":
-        if not validit.value == "true" or validit.value == "false":
+        if validit.value != "true" and validit.value != "false":
             print("Invalid argument bool \n", file=sys.stderr)
             exit(ERR_WRG_XML)
 
@@ -386,29 +387,21 @@ for child in root:
 #####FIND VAR#####
 def findVar(nameVar):
     global TFFlag
-    match = re.match(r'^(GF|LF|TF)@(.*)$', nameVar)
+    match = re.match(r'^(GF|LF|TF)@(.*)$', nameVar.value)
     var = match.group(1)
     name = match.group(2)
     if var == 'GF':
-        if name in GF.keys():
-            print("GF is existing \n", file=sys.stderr)
-            exit(ERR_SEM_CHECK)
         if name in GF:
-            return GF[name]
+            return GF.get(name)
         else:
             print("non existing GF \n", file=sys.stderr)
             exit(ERR_FOR_XML)
     if var == 'TF':
-        if name in TF.keys():
-            print("TF is existing \n", file=sys.stderr)
-            exit(ERR_SEM_CHECK)
-
         if TFFlag == False:
             print("TF is undefined \n", file=sys.stderr)
             exit(ERR_FRAME_NON)
-
         if name in TF:
-            return TF[name]
+            return TF.get(name)
         else:
             print("non existing TF \n", file=sys.stderr)
             exit(ERR_FOR_XML)
@@ -416,26 +409,37 @@ def findVar(nameVar):
         if len(LF) == 0:
             print("LF is undefined \n", file=sys.stderr)
             exit(ERR_FRAME_NON)
-        if name in LF[-1].keys():
-            print("LF is existing \n", file=sys.stderr)
-            exit(ERR_SEM_CHECK)
         if name in LF[-1]:
-            return LF[name]
+            return LF[-1].get(name)
         else:
             print("non existing LF \n", file=sys.stderr)
             exit(ERR_FOR_XML)
-
+#####FIND ALL#####
+def findAll(nameAll):
+    if nameAll is None:
+        print("non existing value \n", file=sys.stderr)
+        exit(ERR_MISS_VALUE)
+    if nameAll.type == 'var':
+        tmp = findVar(nameAll)
+    else: 
+        tmp = nameAll
+    return tmp.value , tmp.type
 
 #####MAIN FUNCTION OF INTERPRET#####
 
 def interpretMainFunction(instr):
+    global positionI
     global TF
     global LF
     global TFFlag
 
 
     if instr.name.upper() == "MOVE":
-        print("hallo")
+        var = findVar(instr.args[0])
+        val, type = findAll(instr.args[1])
+
+        var.value = val
+        var.type = type
 
     elif instr.name.upper() == "CREATEFRAME":
         TF.clear()
@@ -465,17 +469,17 @@ def interpretMainFunction(instr):
             if name in GF.keys():
                 print("GF is existing \n", file=sys.stderr)
                 exit(ERR_SEM_CHECK)
-            GF.update({name:var})
+            GF.update({name:Variable(None,None)})
            
         
         elif var == 'TF':
-            if name in TF.keys():
-                print("TF is existing \n", file=sys.stderr)
-                exit(ERR_SEM_CHECK)
             if TFFlag == False:
                 print("TF is undefined \n", file=sys.stderr)
                 exit(ERR_FRAME_NON)
-            TF.update({name: var})
+            if name in TF.keys():
+                print("TF is existing \n", file=sys.stderr)
+                exit(ERR_SEM_CHECK)
+            TF.update({name: Variable(None, None)})
             
 
         elif var == 'LF':
@@ -485,7 +489,7 @@ def interpretMainFunction(instr):
             if name in LF[-1].keys():
                 print("LF is existing \n", file=sys.stderr)
                 exit(ERR_SEM_CHECK)
-            LF[-1].update({name: var})
+            LF[-1].update({name: Variable(None, None)})
            
 
     elif instr.name.upper() == "CALL":
@@ -495,34 +499,222 @@ def interpretMainFunction(instr):
         print("hallo")
 
     elif instr.name.upper() == "PUSHS":
-        print("hallo")
+        val, type = findAll(instr.args[0])
+        tmp = Argument(val, type)
+        dataStack.append(tmp)
 
     elif instr.name.upper() == "POPS":
-        print("hallo")
+        if len(dataStack) == 0:
+            print("Empty stack cant pop \n", file=sys.stderr)
+            exit(ERR_MISS_VALUE)
+        var = findVar(instr.args[0])
+        sym = dataStack.pop(-1)
+        var.value = sym.value
+        var.type = sym.type
 
     elif instr.name.upper() == "ADD":
-        print("hallo")
-
+        var = instr.args[0]
+        symb1 = instr.args[1]
+        symb2 = instr.args[2]
+        if symb1.type == 'var':
+            symb1 = findVar(instr.args[1])
+        if symb2.type == 'var':
+            symb2 = findVar(instr.args[2])
+        if symb1.type != "int":
+            print("arg has to be INT \n", file=sys.stderr)
+            exit(ERR_OP_TYPE)
+        if symb2.type != "int":
+            print("arg has to be INT \n", file=sys.stderr)
+            exit(ERR_OP_TYPE)
+        
+        var.value = int(symb1.value) + int(symb2.value)
+        
+        
     elif instr.name.upper() == "SUB":
-        print("hallo")
+        var = instr.args[0]
+        symb1 = instr.args[1]
+        symb2 = instr.args[2]
+        if symb1.type == 'var':
+            symb1 = findVar(instr.args[1])
+        if symb2.type == 'var':
+            symb2 = findVar(instr.args[2])
+        if symb1.type != "int":
+            print("arg has to be INT \n", file=sys.stderr)
+            exit(ERR_OP_TYPE)
+        if symb2.type != "int":
+            print("arg has to be INT \n", file=sys.stderr)
+            exit(ERR_OP_TYPE)
+
+        var.value = int(symb1.value) - int(symb2.value)
+
 
     elif instr.name.upper() == "MUL":
-        print("hallo")
+        var = instr.args[0]
+        symb1 = instr.args[1]
+        symb2 = instr.args[2]
+        if symb1.type == 'var':
+            symb1 = findVar(instr.args[1])
+        if symb2.type == 'var':
+            symb2 = findVar(instr.args[2])
+        if symb1.type != "int":
+            print("arg has to be INT \n", file=sys.stderr)
+            exit(ERR_OP_TYPE)
+        if symb2.type != "int":
+            print("arg has to be INT \n", file=sys.stderr)
+            exit(ERR_OP_TYPE)
+
+        var.value = int(symb1.value) * int(symb2.value)
+
 
     elif instr.name.upper() == "IDIV":
-        print("hallo")
+        var = instr.args[0]
+        symb1 = instr.args[1]
+        symb2 = instr.args[2]
+        if symb1.type == 'var':
+            symb1 = findVar(instr.args[1])
+        if symb2.type == 'var':
+            symb2 = findVar(instr.args[2])
+        if symb1.type != "int":
+            print("arg has to be INT \n", file=sys.stderr)
+            exit(ERR_OP_TYPE)
+        if symb2.type != "int":
+            print("arg has to be INT \n", file=sys.stderr)
+            exit(ERR_OP_TYPE)
+        if int(symb2.value) == 0:
+            print("illegal operation div by 0 \n", file=sys.stderr)
+            exit(ERR_WRONG_OP_VAL)
+        var.value = int(symb1.value) // int(symb2.value)
+
 
     elif instr.name.upper() == "LT":
-        print("hallo")
+        var = instr.args[0]
+        symb1 = instr.args[1]
+        symb2 = instr.args[2]
+        if symb1.type == 'var':
+            symb1 = findVar(instr.args[1])
+        if symb2.type == 'var':
+            symb2 = findVar(instr.args[2])
+        if symb1.type != symb2.type:
+            print("symb1 and symb2 are not same \n", file=sys.stderr)
+            exit(ERR_OP_TYPE)
+        if symb1.type == "int":
+            if int(symb1.value) < int(symb2.value):
+                var.type = "bool"
+                var.value = "true"
+            else:
+                var.type = "bool"
+                var.value = "false"
+        elif symb1.type == "bool":
+            if symb1.value < symb2.value:
+                var.type = "bool"
+                var.value = "true"
+            else:
+                var.type = "bool"
+                var.value = "false"
+        elif symb1.type == "string":
+            if symb1.value < symb2.value:
+                var.type = "bool"
+                var.value = "true"
+            else:
+                var.type = "bool"
+                var.value = "false"
+        else:
+            print("symb1 and symb2 are not int/bool/string \n", file=sys.stderr)
+            exit(ERR_OP_TYPE)
 
     elif instr.name.upper() == "GT":
-        print("hallo")
+        var = instr.args[0]
+        symb1 = instr.args[1]
+        symb2 = instr.args[2]
+        if symb1.type == 'var':
+            symb1 = findVar(instr.args[1])
+        if symb2.type == 'var':
+            symb2 = findVar(instr.args[2])
+        if symb1.type != symb2.type:
+            print("symb1 and symb2 are not same \n", file=sys.stderr)
+            exit(ERR_OP_TYPE)
+        if symb1.type == "int":
+            if int(symb1.value) > int(symb2.value):
+                var.type = "bool"
+                var.value = "true"
+            else:
+                var.type = "bool"
+                var.value = "false"
+        elif symb1.type == "bool":
+            if symb1.value > symb2.value:
+                var.type = "bool"
+                var.value = "true"
+            else:
+                var.type = "bool"
+                var.value = "false"
+        elif symb1.type == "string":
+            if symb1.value > symb2.value:
+                var.type = "bool"
+                var.value = "true"
+            else:
+                var.type = "bool"
+                var.value = "false"
+        else:
+            print("symb1 and symb2 are not int/bool/string \n", file=sys.stderr)
+            exit(ERR_OP_TYPE)
 
     elif instr.name.upper() == "EQ":
-        print("hallo")
+        var = instr.args[0]
+        symb1 = instr.args[1]
+        symb2 = instr.args[2]
+        if symb1.type == 'var':
+            symb1 = findVar(instr.args[1])
+        if symb2.type == 'var':
+            symb2 = findVar(instr.args[2])
+        if symb1.type != symb2.type:
+            print("symb1 and symb2 are not same \n", file=sys.stderr)
+            exit(ERR_OP_TYPE)
+        if symb1.type == "int":
+            if int(symb1.value) == int(symb2.value):
+                var.type = "bool"
+                var.value = "true"
+            else:
+                var.type = "bool"
+                var.value = "false"
+        elif symb1.type == "bool":
+            if symb1.value == symb2.value:
+                var.type = "bool"
+                var.value = "true"
+            else:
+                var.type = "bool"
+                var.value = "false"
+        elif symb1.type == "string":
+            if symb1.value == symb2.value:
+                var.type = "bool"
+                var.value = "true"
+            else:
+                var.type = "bool"
+                var.value = "false"
+        else:
+            print("symb1 and symb2 are not int/bool/string \n", file=sys.stderr)
+            exit(ERR_OP_TYPE)
 
-    elif instr.name.upper() == "ADD":
-        print("hallo")
+    elif instr.name.upper() == "AND":
+        var = instr.args[0]
+        symb1 = instr.args[1]
+        symb2 = instr.args[2]
+        if symb1.type == 'var':
+            symb1 = findVar(instr.args[1])
+        if symb2.type == 'var':
+            symb2 = findVar(instr.args[2])
+        if symb1.type != symb2.type:
+            print("symb1 and symb2 are not same \n", file=sys.stderr)
+            exit(ERR_WRONG_OP_VAL)
+        if symb1.type == 'bool':
+            if symb1.value == 'true' and symb2.value == 'true':
+                var.type = "bool"
+                var.value = "true"
+            else:
+                var.type = "bool"
+                var.value = "false"
+        else:
+            print("symb1 and symb2 are not bool \n", file=sys.stderr)
+            exit(ERR_OP_TYPE)
 
     elif instr.name.upper() == "OR":
         print("hallo")
@@ -558,7 +750,7 @@ def interpretMainFunction(instr):
         print("hallo")
 
     elif instr.name.upper() == "LABEL":
-        print("hallo")
+        pass
 
     elif instr.name.upper() == "JUMP":
         print("hallo")
@@ -567,21 +759,26 @@ def interpretMainFunction(instr):
         print("hallo")
         
     elif instr.name.upper() == "EXIT":
-        print("hallo")
+        if instr.args[0].type != 'int':
+            print("invalid type \n", file=sys.stderr)
+            exit(ERR_OP_TYPE)
+        if instr.args[0].value < 0 or instr.args[0].value > 49:
+            print("invalid type \n", file=sys.stderr)
+            exit(ERR_WRONG_OP_VAL)
+
+        sys.exit(instr.args[0].value)
 
     elif instr.name.upper() == "DPRINT":
-        print("hallo")
-
+        print(instr.args[0].type, file=sys.stderr)
     elif instr.name.upper() == "BREAK":
-        print("hallo")
-
+        print("hallo")                                          ###TODO
     else:
         print("Instruction was not found \n", file=sys.stderr)
         exit(ERR_WRG_XML)
 
 
 #####INTREPRET#####
-i=0
-while i < len(instructions):
-    interpretMainFunction(instructions[i])
-    i += 1
+
+while positionI < len(instructions):
+    interpretMainFunction(instructions[positionI])
+    positionI += 1
