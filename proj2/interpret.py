@@ -717,16 +717,73 @@ def interpretMainFunction(instr):
             exit(ERR_OP_TYPE)
 
     elif instr.name.upper() == "OR":
-        print("hallo")
+        var = instr.args[0]
+        symb1 = instr.args[1]
+        symb2 = instr.args[2]
+        if symb1.type == 'var':
+            symb1 = findVar(instr.args[1])
+        if symb2.type == 'var':
+            symb2 = findVar(instr.args[2])
+        if symb1.type != symb2.type:
+            print("symb1 and symb2 are not same \n", file=sys.stderr)
+            exit(ERR_WRONG_OP_VAL)
+        if symb1.type == 'bool':
+            if symb1.value == 'false' and symb2.value == 'false':
+                var.type = "bool"
+                var.value = "false"
+            else:
+                var.type = "bool"
+                var.value = "true"
+        else:
+            print("symb1 and symb2 are not bool \n", file=sys.stderr)
+            exit(ERR_OP_TYPE)
         
     elif instr.name.upper() == "NOT":
-        print("hallo")
+        var = instr.args[0]
+        symb = instr.args[1]
+        if symb.type == 'var':
+            symb = findVar(instr.args[1])
+        if symb.type == 'bool':
+            if symb.value == 'false':
+                var.type = "bool"
+                var.value = "true"
+            else:
+                var.type = "bool"
+                var.value = "false"
+        else:
+            print("symb1 and symb2 are not bool \n", file=sys.stderr)
+            exit(ERR_OP_TYPE)
 
     elif instr.name.upper() == "INT2CHAR":
-        print("hallo")
+        var = instr.args[0]
+        symb = instr.args[1]
+        if symb.type == 'var':
+            symb = findVar(instr.args[1])
+        if symb.type != 'int':
+            print("cant convert non int value \n", file=sys.stderr)
+            exit(ERR_OP_TYPE)
+        try:
+            var.type = "string"
+            var.value = chr(int(symb.value))
+        except:
+            print("cant convert int to char \n", file=sys.stderr)
+            exit(ERR_STRING)
         
-    elif instr.name.upper() == "STR2INT":
-        print("hallo")
+    elif instr.name.upper() == "STRI2INT":
+        var = instr.args[0]
+        symb1 = instr.args[1]
+        symb2 = instr.args[2]
+        if symb1.type == 'var':
+            symb1 = findVar(instr.args[1])
+        if symb2.type == 'var':
+            symb2 = findVar(instr.args[2])
+            
+        try:
+            var.type = "string"
+            var.value = chr(int(symb.value))
+        except:
+            print("cant convert int to char \n", file=sys.stderr)
+            exit(ERR_STRING)
 
     elif instr.name.upper() == "READ":
         print("hallo")

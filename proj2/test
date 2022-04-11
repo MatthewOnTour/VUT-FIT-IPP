@@ -35,10 +35,9 @@
   <instruction order="10" opcode="LABEL">
     <arg1 type="label">end</arg1>
   </instruction>
-  <instruction order="13" opcode="AND">
+  <instruction order="13" opcode="INT2CHAR">
     <arg1 type="var">GF@counter</arg1>
-    <arg2 type="bool">true</arg2>
-    <arg3 type="bool">true</arg3>
+    <arg2 type="int">88</arg2>
   </instruction>
   <instruction order="12" opcode="POPS">
     <arg1 type="var">GF@counter</arg1>
