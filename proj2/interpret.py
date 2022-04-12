@@ -492,11 +492,11 @@ def interpretMainFunction(instr):
             LF[-1].update({name: Variable(None, None)})
            
 
-    elif instr.name.upper() == "CALL":
+    elif instr.name.upper() == "CALL":      # TODO
         print("hallo")
 
     elif instr.name.upper() == "RETURN":
-        print("hallo")
+        print("hallo")                      # TODO
 
     elif instr.name.upper() == "PUSHS":
         val, type = findAll(instr.args[0])
@@ -778,42 +778,114 @@ def interpretMainFunction(instr):
         if symb2.type == 'var':
             symb2 = findVar(instr.args[2])
             
+        if symb1.type != 'string' or symb2.type != 'int':
+            print("wrong types when STRI2INT \n", file=sys.stderr)
+            exit(ERR_OP_TYPE)
         try:
-            var.type = "string"
-            var.value = chr(int(symb.value))
+            var.type = "int"
+            var.value = ord(symb1.value[int(symb2.value)])
         except:
-            print("cant convert int to char \n", file=sys.stderr)
+            print("out of range \n", file=sys.stderr)
             exit(ERR_STRING)
+        print(var.value)
 
-    elif instr.name.upper() == "READ":
-        print("hallo")
+    elif instr.name.upper() == "READ":   #check
+        var = instr.args[0]
+        symb = instr.args[1]
+        if symb.type == 'var':
+            symb = findVar(instr.args[1])
+        
+        if symb.type == 'int':
+            try:
+                var.type = "int"
+                var.value = int(symb.value)
+            except:
+                var.type = "nil"
+                var.value = "nil"
+        elif symb.type == 'string':
+            pass                               #TODO
+                    
+        elif symb.type == 'bool':
+            symb.type = symb.type.lower()
+            if symb.value == 'true':
+                var.type = 'bool'
+                var.value = 'true'
+            else:
+                var.type = 'bool'
+                var.value = 'false'
+        else:
+            var.type = "nil"
+            var.value = "nil"
+
 
     elif instr.name.upper() == "WRITE":
-        print("hallo")
+        symb = instr.args[0]
+        if symb.type == 'var':
+            symb = findVar(instr.args[0])
+        
+        if symb.type == 'nil':
+            print("",end = '')
+        elif symb.type == 'float':
+            print(float.hex(symb.value), end='')
+        else:
+            print(symb.value ,end = '')
 
     elif instr.name.upper() == "CONCAT":
-        print("hallo")
+        var = instr.args[0]
+        symb1 = instr.args[1]
+        symb2 = instr.args[2]
+        if symb1.type == 'var':
+            symb1 = findVar(instr.args[1])
+        if symb2.type == 'var':
+            symb2 = findVar(instr.args[2])
+
+        if symb1.type != 'string' or symb2.type != 'string':
+            print("out of range \n", file=sys.stderr)
+            exit(ERR_OP_TYPE)
+
+        var.type = symb1.type
+        # var.value = symb1.value + symb2.value      #need fix
 
     elif instr.name.upper() == "STRLEN":
-        print("hallo")
+        var = instr.args[0]
+        symb = instr.args[1]
+        if symb1.type == 'var':
+            symb1 = findVar(instr.args[1])
+
+        if symb.type == 'string':
+            var.type = 'int'
+            var.value = len(symb.value)
 
     elif instr.name.upper() == "GETCHAR":
-        print("hallo")
+        var = instr.args[0]
+        symb1 = instr.args[1]
+        symb2 = instr.args[2]
+        if symb1.type == 'var':
+            symb1 = findVar(instr.args[1])
+        if symb2.type == 'var':
+            symb2 = findVar(instr.args[2])
+
+        if symb1.type != 'string' or symb2.type != 'int':
+            print("invalid arg type \n", file=sys.stderr)
+            exit(ERR_OP_TYPE)
+        if len(symb1.value) <= or symb2.value < 0:
+            print("invalid range \n", file=sys.stderr)
+            exit(ERR_OP_TYPE)
 
     elif instr.name.upper() == "SETCHAR":
-        print("hallo")
+        print("hallo")  # TODO
 
     elif instr.name.upper() == "TYPE":
-        print("hallo")
+        print("hallo")  # TODO
 
     elif instr.name.upper() == "LABEL":
-        pass
+        pass            # TODO
 
     elif instr.name.upper() == "JUMP":
-        print("hallo")
+        print("hallo")  # TODO
 
     elif instr.name.upper() == "JUMPIFEQ":
-        print("hallo")
+        print("hallo")  # TODO
         
     elif instr.name.upper() == "EXIT":
         if instr.args[0].type != 'int':
@@ -828,7 +900,7 @@ def interpretMainFunction(instr):
     elif instr.name.upper() == "DPRINT":
         print(instr.args[0].type, file=sys.stderr)
     elif instr.name.upper() == "BREAK":
-        print("hallo")                                          ###TODO
+        print("hallo")    # TODO
     else:
         print("Instruction was not found \n", file=sys.stderr)
         exit(ERR_WRG_XML)
