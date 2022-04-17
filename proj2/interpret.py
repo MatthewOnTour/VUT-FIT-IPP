@@ -72,9 +72,6 @@ def validLabel(validit):
         exit(ERR_WRG_XML)
 
 def validOthers(validit):
-    if validit.type == "nil":
-        print("Invalid argument nil \n", file=sys.stderr)
-        exit(ERR_OP_TYPE)
     if validit.type == "int":
         if re.search(r"^(-){0,1}([0-9]*)$", validit.value) is None:
             print("Invalid argument int \n", file=sys.stderr)
@@ -464,6 +461,9 @@ def interpretMainFunction(instr):
     if instr.name.upper() == "MOVE":
         var = findVar(instr.args[0])
         val, type = findAll(instr.args[1])
+        if type == None:
+            print("uninit var \n", file=sys.stderr)
+            exit(ERR_MISS_VALUE)
 
         var.value = val
         var.type = type
@@ -544,6 +544,9 @@ def interpretMainFunction(instr):
 
     elif instr.name.upper() == "PUSHS":
         val, type = findAll(instr.args[0])
+        if type == None:
+            print("Empty stack cant pop \n", file=sys.stderr)
+            exit(ERR_MISS_VALUE)
         tmp = Argument(type, val)
         dataStack.append(tmp)
         
@@ -656,6 +659,7 @@ def interpretMainFunction(instr):
         if symb1.type == None or symb2.type == None:
             print("uninit var \n", file=sys.stderr)
             exit(ERR_MISS_VALUE)
+        
         if symb1.type != symb2.type:
             print("symb1 and symb2 are not same \n", file=sys.stderr)
             exit(ERR_OP_TYPE)
@@ -674,7 +678,28 @@ def interpretMainFunction(instr):
                 var.type = "bool"
                 var.value = "false"
         elif symb1.type == "string":
-            if symb1.value < symb2.value:
+            tmp = re.split(r"\\", '' if symb1.value is None else symb1.value)
+            tmp2 = ""
+            for i in range(0, len(tmp)):
+                if i == 0:
+                    tmp2 += tmp[i]
+                elif len(tmp[i]) > 3:
+                    tmp2 += chr(int((tmp[i][:3])))
+                    tmp2 += tmp[i][3:]
+                else:
+                    tmp2 += chr(int((tmp[i])))
+            tmp3 = re.split(r"\\", '' if symb2.value is None else symb2.value)
+            tmp4 = ""
+            for i in range(0, len(tmp3)):
+                if i == 0:
+                    tmp4 += tmp3[i]
+                elif len(tmp3[i]) > 3:
+                    tmp4 += chr(int((tmp3[i][:3])))
+                    tmp4 += tmp3[i][3:]
+                else:
+                    tmp4 += chr(int((tmp3[i])))
+
+            if tmp2 < tmp4:
                 var.type = "bool"
                 var.value = "true"
             else:
@@ -713,7 +738,28 @@ def interpretMainFunction(instr):
                 var.type = "bool"
                 var.value = "false"
         elif symb1.type == "string":
-            if symb1.value > symb2.value:
+            tmp = re.split(r"\\", '' if symb1.value is None else symb1.value)
+            tmp2 = ""
+            for i in range(0, len(tmp)):
+                if i == 0:
+                    tmp2 += tmp[i]
+                elif len(tmp[i]) > 3:
+                    tmp2 += chr(int((tmp[i][:3])))
+                    tmp2 += tmp[i][3:]
+                else:
+                    tmp2 += chr(int((tmp[i])))
+            tmp3 = re.split(r"\\", '' if symb2.value is None else symb2.value)
+            tmp4 = ""
+            for i in range(0, len(tmp3)):
+                if i == 0:
+                    tmp4 += tmp3[i]
+                elif len(tmp3[i]) > 3:
+                    tmp4 += chr(int((tmp3[i][:3])))
+                    tmp4 += tmp3[i][3:]
+                else:
+                    tmp4 += chr(int((tmp3[i])))
+
+            if tmp2 > tmp4:
                 var.type = "bool"
                 var.value = "true"
             else:
@@ -735,9 +781,13 @@ def interpretMainFunction(instr):
             print("uninit var \n", file=sys.stderr)
             exit(ERR_MISS_VALUE)
         if symb1.type != symb2.type:
-            print("symb1 and symb2 are not same \n", file=sys.stderr)
-            exit(ERR_OP_TYPE)
-        if symb1.type == "int":
+            if symb1.type == 'nil' or symb2.type == 'nil':
+                var.type = "bool"
+                var.value = "false"
+            else:
+                print("symb1 and symb2 are not same \n", file=sys.stderr)
+                exit(ERR_OP_TYPE)
+        elif symb1.type == "int":
             if int(symb1.value) == int(symb2.value):
                 var.type = "bool"
                 var.value = "true"
@@ -752,6 +802,34 @@ def interpretMainFunction(instr):
                 var.type = "bool"
                 var.value = "false"
         elif symb1.type == "string":
+            tmp = re.split(r"\\", '' if symb1.value is None else symb1.value)
+            tmp2 = ""
+            for i in range(0, len(tmp)):
+                if i == 0:
+                    tmp2 += tmp[i]
+                elif len(tmp[i]) > 3:
+                    tmp2 += chr(int((tmp[i][:3])))
+                    tmp2 += tmp[i][3:]
+                else:
+                    tmp2 += chr(int((tmp[i])))
+            tmp3 = re.split(r"\\", '' if symb2.value is None else symb2.value)
+            tmp4 = ""
+            for i in range(0, len(tmp3)):
+                if i == 0:
+                    tmp4 += tmp3[i]
+                elif len(tmp3[i]) > 3:
+                    tmp4 += chr(int((tmp3[i][:3])))
+                    tmp4 += tmp3[i][3:]
+                else:
+                    tmp4 += chr(int((tmp3[i])))
+            
+            if tmp2 == tmp4:
+                var.type = "bool"
+                var.value = "true"
+            else:
+                var.type = "bool"
+                var.value = "false"
+        elif symb1.type == 'nil':
             if symb1.value == symb2.value:
                 var.type = "bool"
                 var.value = "true"
@@ -800,7 +878,7 @@ def interpretMainFunction(instr):
             exit(ERR_MISS_VALUE)
         if symb1.type != symb2.type:
             print("symb1 and symb2 are not same \n", file=sys.stderr)
-            exit(ERR_WRONG_OP_VAL)
+            exit(ERR_OP_TYPE)
         if symb1.type == 'bool':
             if symb1.value == 'false' and symb2.value == 'false':
                 var.type = "bool"
@@ -836,6 +914,9 @@ def interpretMainFunction(instr):
         symb = instr.args[1]
         if symb.type == 'var':
             symb = findVar(instr.args[1])
+        if symb.type == None:
+            print("uninit var \n", file=sys.stderr)
+            exit(ERR_MISS_VALUE)
         if symb.type != 'int':
             print("cant convert non int value \n", file=sys.stderr)
             exit(ERR_OP_TYPE)
@@ -854,17 +935,22 @@ def interpretMainFunction(instr):
             symb1 = findVar(instr.args[1])
         if symb2.type == 'var':
             symb2 = findVar(instr.args[2])
-            
+        if symb1.type == None or symb2.type == None:
+            print("uninit var \n", file=sys.stderr)
+            exit(ERR_MISS_VALUE)
         if symb1.type != 'string' or symb2.type != 'int':
             print("wrong types when STRI2INT \n", file=sys.stderr)
             exit(ERR_OP_TYPE)
+        if int(symb2.value) < 0:
+            print("out of range \n", file=sys.stderr)
+            exit(ERR_STRING)
         try:
             var.type = "int"
             var.value = ord(symb1.value[int(symb2.value)])
         except:
             print("out of range \n", file=sys.stderr)
             exit(ERR_STRING)
-        print(var.value)
+        
 
     elif instr.name.upper() == "READ":
         var = findVar(instr.args[0])
@@ -872,6 +958,9 @@ def interpretMainFunction(instr):
         if symb.type == 'var':
             symb = findVar(instr.args[1])
         inVar = inputFile.readline()
+        if symb.type == None:
+            print("uninit var \n", file=sys.stderr)
+            exit(ERR_MISS_VALUE)
         if symb.value == 'int':
             try:
                 var.type = "int"
@@ -880,13 +969,20 @@ def interpretMainFunction(instr):
                 var.type = "nil"
                 var.value = "nil"
         elif symb.value == 'string':
-            var.type = "string"
-            var.value = inVar[:-1]
+            if inVar == '':
+                var.type = 'nil'
+                var.value = 'nil'
+            else:
+                var.type = "string"
+                var.value = inVar[:-1]
         elif symb.value == 'bool':
-            symb.type = symb.type.lower()
+            inVar = inVar[:-1].lower()
             if inVar == 'true':
                 var.type = 'bool'
                 var.value = 'true'
+            elif inVar == '':
+                var.type = 'nil'
+                var.value = 'nil'
             else:
                 var.type = 'bool'
                 var.value = 'false'
@@ -906,6 +1002,9 @@ def interpretMainFunction(instr):
         symb = instr.args[0]
         if symb.type == 'var':
             symb = findVar(instr.args[0])
+        if symb.type == None:
+            print("uninit var \n", file=sys.stderr)
+            exit(ERR_MISS_VALUE)
         if symb.value == None:
             print("", end='')
         elif symb.type == 'nil':
@@ -928,8 +1027,13 @@ def interpretMainFunction(instr):
                 elif len(tmp[i]) > 3:
                     tmp2 += chr(int((tmp[i][:3])))
                     tmp2 += tmp[i][3:]
+                elif int(len(tmp[i])) == 0:
+                    tmp2 += '\\'
                 else:
-                    tmp2 += chr(int((tmp[i])))
+                    try:
+                        tmp2 += chr(int((tmp[i])))
+                    except:
+                        tmp2 += tmp[i]
             print(tmp2 ,end = '')
         
 
@@ -958,12 +1062,18 @@ def interpretMainFunction(instr):
     elif instr.name.upper() == "STRLEN":
         var = findVar(instr.args[0])
         symb = instr.args[1]
-        if symb1.type == 'var':
-            symb1 = findVar(instr.args[1])
-
+        if symb.type == 'var':
+            symb = findVar(instr.args[1])
+        symb.value = '' if symb.value == None else symb.value
         if symb.type == 'string':
             var.type = 'int'
             var.value = len(symb.value)
+        elif symb.type == None:
+            print("invalid type \n", file=sys.stderr)
+            exit(ERR_MISS_VALUE)
+        else:
+            print("invalid type \n", file=sys.stderr)
+            exit(ERR_OP_TYPE)
 
     elif instr.name.upper() == "GETCHAR":
         var = findVar(instr.args[0])
@@ -973,15 +1083,17 @@ def interpretMainFunction(instr):
             symb1 = findVar(instr.args[1])
         if symb2.type == 'var':
             symb2 = findVar(instr.args[2])
-
+        if symb1.type == None or symb2.type == None:
+            print("uninit var \n", file=sys.stderr)
+            exit(ERR_MISS_VALUE)
         if symb1.type != 'string' or symb2.type != 'int':
             print("invalid arg type \n", file=sys.stderr)
             exit(ERR_OP_TYPE)
-        if len(symb1.value) <= symb2.value or symb2.value < 0:
+        if int(len(symb1.value)) <= int(symb2.value) or int(symb2.value) < 0:
             print("invalid range \n", file=sys.stderr)
             exit(ERR_STRING)
         var.type = 'string'
-        var.value = symb1.value[symb2.value]
+        var.value = symb1.value[int(symb2.value)]
 
     elif instr.name.upper() == "SETCHAR":
         var = findVar(instr.args[0])
@@ -991,20 +1103,39 @@ def interpretMainFunction(instr):
             symb1 = findVar(instr.args[1])
         if symb2.type == 'var':
             symb2 = findVar(instr.args[2])
+        if var.type == None or symb1.type == None or symb2.type == None:
+            print("var is none \n", file=sys.stderr)
+            exit(ERR_MISS_VALUE)
+        if var.type != 'string':
+            print("var have to be str \n", file=sys.stderr)
+            exit(ERR_OP_TYPE)
         if symb1.type != 'int':
             print("symb1 has to be int \n", file=sys.stderr)
             exit(ERR_OP_TYPE)
         if symb2.type != 'string':
             print("symb2 has to be string \n", file=sys.stderr)
             exit(ERR_OP_TYPE)
-
-        if int(symb1.value) >= len(var.value):
+        if symb2.value == None:
+            print("empty str \n", file=sys.stderr)
+            exit(ERR_STRING)
+        if int(symb1.value) >= len(var.value) or int(symb1.value) < 0:
             print("wrong index \n", file=sys.stderr)
             exit(ERR_STRING)
         tmp = var.value
-        var.value = tmp[:int(symb1.value)] + symb2.value + tmp[int(symb1.value)+1:]
+        tmp1 = re.split(r"\\", '' if symb2.value is None else symb2.value)
+        tmp2 = ""
+        for i in range(0, len(tmp1)):
+            if i == 0:
+                tmp2 += tmp1[i]
+            elif len(tmp1[i]) > 3:
+                tmp2 += chr(int((tmp1[i][:3])))
+                tmp2 += tmp1[i][3:]
+            else:
+                tmp2 += chr(int((tmp1[i])))
+        symb2.value = tmp2
+        var.value = tmp[:int(symb1.value)] + symb2.value[0] + tmp[int(symb1.value)+1:]
         var.type = 'string'
-        print(var.value)
+        
 
     elif instr.name.upper() == "TYPE":
         var = findVar(instr.args[0])
@@ -1046,6 +1177,9 @@ def interpretMainFunction(instr):
             symb1 = findVar(instr.args[1])
         if symb2.type == 'var':
             symb2 = findVar(instr.args[2])
+        if symb1.type == None or symb2.type == None:
+            print("uninit var \n", file=sys.stderr)
+            exit(ERR_MISS_VALUE)
         if lab.value not in label.keys():
             print("label not existing \n", file=sys.stderr)
             exit(ERR_SEM_CHECK)
@@ -1053,6 +1187,30 @@ def interpretMainFunction(instr):
             if symb1.type == 'int':
                 symb1.value = int(symb1.value)
                 symb2.value = int(symb2.value)
+            elif symb1.type == 'string':
+                tmp = re.split(r"\\", '' if symb1.value is None else symb1.value)
+                tmp2 = ""
+                for i in range(0, len(tmp)):
+                    if i == 0:
+                        tmp2 += tmp[i]
+                    elif len(tmp[i]) > 3:
+                        tmp2 += chr(int((tmp[i][:3])))
+                        tmp2 += tmp[i][3:]
+                    else:
+                        tmp2 += chr(int((tmp[i])))
+                tmp3 = re.split(r"\\", '' if symb2.value is None else symb2.value)
+                tmp4 = ""
+                for i in range(0, len(tmp3)):
+                    if i == 0:
+                        tmp4 += tmp3[i]
+                    elif len(tmp3[i]) > 3:
+                        tmp4 += chr(int((tmp3[i][:3])))
+                        tmp4 += tmp3[i][3:]
+                    else:
+                        tmp4 += chr(int((tmp3[i])))
+                symb1.value = tmp2
+                symb2.value = tmp4
+
             if symb1.value == symb2.value:
                 while int(label[lab.value]) != int(instructions[positionI].number):
                     if int(label[lab.value]) < int(instructions[positionI].number):
@@ -1060,7 +1218,7 @@ def interpretMainFunction(instr):
                     else:
                         positionI += 1
                 positionI -= 1
-        elif symb1.type == 'nil':
+        elif symb1.type == 'nil' or symb2.type == 'nil':
             if symb1.value == symb2.value: 
                 while int(label[lab.value]) != int(instructions[positionI].number):
                     if int(label[lab.value]) < int(instructions[positionI].number):
@@ -1081,6 +1239,9 @@ def interpretMainFunction(instr):
             symb1 = findVar(instr.args[1])
         if symb2.type == 'var':
             symb2 = findVar(instr.args[2])
+        if symb1.type == None or symb2.type == None:
+            print("uninit var \n", file=sys.stderr)
+            exit(ERR_MISS_VALUE)
         if lab.value not in label.keys():
             print("label not existing \n", file=sys.stderr)
             exit(ERR_SEM_CHECK)
@@ -1088,21 +1249,44 @@ def interpretMainFunction(instr):
             if symb1.type == 'int':
                 symb1.value = int(symb1.value)
                 symb2.value = int(symb2.value)
+            elif symb1.type == 'string':
+                tmp = re.split(r"\\", '' if symb1.value is None else symb1.value)
+                tmp2 = ""
+                for i in range(0, len(tmp)):
+                    if i == 0:
+                        tmp2 += tmp[i]
+                    elif len(tmp[i]) > 3:
+                        tmp2 += chr(int((tmp[i][:3])))
+                        tmp2 += tmp[i][3:]
+                    else:
+                        tmp2 += chr(int((tmp[i])))
+                tmp3 = re.split(r"\\", '' if symb2.value is None else symb2.value)
+                tmp4 = ""
+                for i in range(0, len(tmp3)):
+                    if i == 0:
+                        tmp4 += tmp3[i]
+                    elif len(tmp3[i]) > 3:
+                        tmp4 += chr(int((tmp3[i][:3])))
+                        tmp4 += tmp3[i][3:]
+                    else:
+                        tmp4 += chr(int((tmp3[i])))
+                symb1.value = tmp2
+                symb2.value = tmp4
             if symb1.value != symb2.value:
                 while int(label[lab.value]) != int(instructions[positionI].number):
                     if int(label[lab.value]) < int(instructions[positionI].number):
                         positionI -= 1
                     else:
                         positionI += 1
-                    positionI -= 1
-        elif symb1.type == 'nil':
+                    
+        elif symb1.type == 'nil' or symb2.type == 'nil':
             if symb1.value != symb2.value: 
                 while int(label[lab.value]) != int(instructions[positionI].number):
                     if int(label[lab.value]) < int(instructions[positionI].number):
                         positionI -= 1
                     else:
                         positionI += 1
-                    positionI -= 1
+                    
         else:
             print("wrong types \n", file=sys.stderr)
             exit(ERR_OP_TYPE)
